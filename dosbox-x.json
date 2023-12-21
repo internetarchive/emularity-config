@@ -1,0 +1,15 @@
+{
+  "name": "DOSBox-X",
+  "native_resolution": [
+    640,
+    480
+  ],
+  "extra_args": [
+    ""
+  ],
+  "js_filename": "dosbox-x.js.gz",
+  "file_locations": {
+    "dosbox.html.mem": "dosbox-sync.mem.gz"
+  },
+  "driver": "dosbox"
+}

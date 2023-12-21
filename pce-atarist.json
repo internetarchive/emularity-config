@@ -1,0 +1,18 @@
+{
+    "name": "PCE AtariST",
+    "native_resolution": [
+        640,
+        400
+    ],
+    "peripherals": [
+        "fd0",
+        "fd1",
+        "hd1",
+        "hd2"
+    ],
+    "bios_filenames": [
+        "tos-1.04-us.rom"
+    ],
+    "js_filename": "pce-atarist.js",
+    "driver": "atarist"
+}

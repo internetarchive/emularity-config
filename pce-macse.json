@@ -1,0 +1,8 @@
+{
+    "name": "PCE Mac SE",
+    "native_resolution": [512, 342],
+    "peripherals": ["fd1", "fd2", "fd3", "hd1", "hd2"],
+    "bios_filenames": ["pce-mac-se.rom", "pce-macplus-pcex.rom", "pce-mac-se-pram.dat"],
+    "js_filename": "pce-macplus.js.gz",
+    "driver":  "macse"
+}

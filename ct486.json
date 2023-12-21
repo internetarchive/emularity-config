@@ -1,0 +1,20 @@
+{
+  "name": "CT486 PC",
+  "bios_filenames": [],
+  "peripherals": [
+    "flop1"
+  ],
+  "native_resolution": [
+    640,
+    400
+  ],
+  "extra_args": [
+    ""
+  ],
+  "driver": "ct486",
+  "wasmjs_filename": "ct486.js.gz",
+  "wasm_filename": "ct486.wasm.gz",
+  "file_locations": {
+    "ct486.wasm": "ct486.wasm.gz"
+  }
+}

@@ -1,0 +1,7 @@
+{
+    "name": "Scripted Amiga Emulator, A2000",
+    "js_filename": "scriptedamigaemulator.js.gz",
+    "bios_filenames": [ "aros-amiga-m68k-rom.bin", "aros-amiga-m68k-ext.bin" ],
+    "native_resolution": [720,568],
+    "driver":  "A2000"
+}
