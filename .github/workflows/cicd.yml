@@ -1,0 +1,14 @@
+name: CICD
+on: push
+jobs:
+  cicd:
+    runs-on: ubuntu-latest
+    permissions: { contents: read, packages: write, id-token: write }
+    steps:
+      - uses: internetarchive/cicd@v1
+        with:
+          BASE_DOMAIN: 'dev.archive.org'
+          NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NOMAD_VAR_HOSTNAMES: '["emularity-config"]'
+          NOMAD_VAR_COUNT: 1
