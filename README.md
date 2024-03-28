@@ -2,14 +2,14 @@
 
 ## example items
 - typical type of item:
-https://ia-petabox-csp.archive.org/details/gg_Star_Wars_1993LucasArts_Tiertex_Design_Studio_U.S._GoldUS
+https://ia-petabox.archive.org/details/gg_Star_Wars_1993LucasArts_Tiertex_Design_Studio_U.S._GoldUS
 
 - most challenging new `ruffle` type of item:
-https://ia-petabox-csp.archive.org/details/flash_loituma
+https://ia-petabox.archive.org/details/flash_loituma
 
 ## current deployment
-- https://emularity-config.dev.archive.org/
-- https://emularity-config.prod.archive.org/
+- https://internetarchive-emularity-config.dev.archive.org/
+- https://emularity-config.ux-b.archive.org/
 
 ## there are 3 related git repos & deployments:
 - https://github.com/internetarchive/emularity-engine

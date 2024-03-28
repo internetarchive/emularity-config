@@ -3,8 +3,8 @@ jobs:
   cicd:
     uses: internetarchive/cicd/.github/workflows/cicd.yml@main
     with:
-      NOMAD_VAR_HOSTNAMES: '["emularity-config"]'
       NOMAD_VAR_PORTS: '{ 80 = "http" }'
       NO_TEST: true
     secrets:
       NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
+      NOMAD_TOKEN_PROD: ${{ secrets.NOMAD_TOKEN_PROD }}
