@@ -2,9 +2,7 @@ FROM nginx:alpine
 
 WORKDIR /usr/share/nginx/html
 
-RUN rm -f index.html && \
-   # xxx not great for files that dont end like: .js.gz .wasm.gz
-   sed -i 's/js;/js gz;/' /etc/nginx/mime.types
+RUN rm -f index.html
 
 COPY default.conf /etc/nginx/conf.d/
 
