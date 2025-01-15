@@ -5,6 +5,7 @@ jobs:
     with:
       NOMAD_VAR_PORTS: '{ 80 = "http" }'
       NO_TEST: true
+      NOMAD_VAR_COUNT: 2
     secrets:
       NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
       NOMAD_TOKEN_PROD: ${{ secrets.NOMAD_TOKEN_PROD }}
