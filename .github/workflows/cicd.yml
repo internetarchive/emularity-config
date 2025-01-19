@@ -1,4 +1,4 @@
-on: push
+on: [push, workflow_dispatch]
 jobs:
   cicd:
     uses: internetarchive/cicd/.github/workflows/cicd.yml@main
