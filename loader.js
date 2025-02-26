@@ -634,7 +634,7 @@ window.Module = null;
 
      function get_cloudpilot_files(cfgr, metadata, modulecfg, filelist) {
        var files = [];
-       bios_files = modulecfg['bios_filenames'];
+       var bios_files = modulecfg['bios_filenames'];
        bios_files.forEach(function (fname, i) {
                             if (fname) {
                               var title = "Bios File ("+ (i+1) +" of "+ bios_files.length +")";
