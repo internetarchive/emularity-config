@@ -7,6 +7,6 @@ jobs:
       NO_TEST: true
       NOMAD_VAR_COUNT: 2
       BASE_DOMAIN: ux-b.archive.org
-      NOMAD_VAR_HOSTNAMES='["emularity-config"]'
+      NOMAD_VAR_HOSTNAMES: '["emularity-config"]'
     secrets:
       NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
