@@ -1,0 +1,160 @@
+# We moved loader.js from (huge) emularity-engine repo to emularity-config epo.
+# Here is the diff range of commits for loader.js since it started in GitHub emularity-engine
+# until it moved here. This is part of the larger changeset (many files) between these 2 commits
+# https://github.com/internetarchive/emularity-engine/compare/583bf77d1a40837a4d0af89fef6004348adb5e85...b25ca4ad9d8e9565b1111642883d1fe1c1f723b6
+diff --git a/loader.js b/loader.js
+index 6789a21..9e6cc5c 100644
+--- a/loader.js
++++ b/loader.js
+@@ -17,7 +17,8 @@
+   *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+   */
+ 
+-var Module = null;
++/* eslint-disable */
++window.Module = null;
+ 
+ (function (Promise) {
+    /**
+@@ -52,7 +53,7 @@ var Module = null;
+ 
+      // yea, this is a hack
+      var images;
+-     if (/archive\.org$/.test(document.location.hostname)) {
++     if (/archive\.org$/.test(document.location.hostname) || /^archive.*\.onion$/.test(document.location.hostname)) {
+        images = { ia: img("/images/ialogo.png"),
+                   mame: img("/images/mame.png"),
+                   mess: img("/images/mame.png"),
+@@ -226,7 +227,7 @@ var Module = null;
+                                              config_args.push(cfgr.keepAspect(modulecfg.keepAspect));
+                                            }
+ 
+-                                           if (/archive\.org$/.test(document.location.hostname)) {
++                                           if (/archive\.org$/.test(document.location.hostname) || /^archive.*\.onion$/.test(document.location.hostname)) {
+                                              config_args.push(cfgr.muted(document.cookie.indexOf('unmute=1') < 0)) // we're muted, unless cookie 'unmute' is set
+                                            }
+ 
+@@ -710,15 +711,30 @@ var Module = null;
+      // NOTE: deliberately use cors.archive.org since this will 302 rewrite to iaXXXXX.us.archive.org/XX/items/...
+      // and need to keep that "artificial" extra domain-ish name to avoid CORS issues with IE/Safari  (tracey@archive)
+      var get_cors_url = function(item, path) {
++       if (item === 'emularity-engine' || item === 'emularity-config' || item === 'emularity-bios') {
++        // If http origin is null (the string 'null'!), assume onion.
++        // See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Origin#null
++         if (location.origin === 'null' || (typeof location.origin === 'string' && location.origin.endsWith('.onion'))) {
++          // this is just for archive.org onion urls
++          return '//archive.org/services/' + item.replace('-', '/') + (path ? '/' + path : '');
++        } else {
++          // allow optional testing CGI arg to hit the review app test cluster
++          // (helpful for testing out pre-production code & files)
++          var prefix = location.search.indexOf('?devao=1') < 0 ? '' : 'internetarchive-';
++          var domain = location.search.indexOf('?devao=1') < 0 ? 'ux-b.archive.org' : 'dev.archive.org';
++          return '//' + prefix + item + '.' + domain + (path ? '/' + path : '');
++         }
++       }
++
+        return '//cors.archive.org/cors/' + item + (path ? '/' + path : '');
+      }
+ 
+      var get_emulator_config_url = function (module) {
+-       return get_cors_url('emularity_engine_v1', module + '.json');
++       return get_cors_url('emularity-engine', module + '.json');
+      };
+ 
+      var get_other_emulator_config_url = function (module) {
+-       return get_cors_url('emularity_config_v1', module + '.cfg');
++       return get_cors_url('emularity-config', module + '.cfg');
+      };
+ 
+      var get_meta_url = function (game_path) {
+@@ -739,11 +755,11 @@ var Module = null;
+      };
+ 
+      var get_js_url = function (js_filename) {
+-       return get_cors_url('emularity_engine_v1', js_filename);
++       return get_cors_url('emularity-engine', js_filename);
+      };
+ 
+      var get_bios_url = function (bios_filename) {
+-       return get_cors_url('emularity_bios_v1', bios_filename);
++       return get_cors_url('emularity-bios', bios_filename);
+      };
+ 
+      function mountat (drive) {
+@@ -1259,11 +1275,23 @@ var Module = null;
+    EmscriptenRunner.prototype.stop = function () {
+    };
+ 
++  var mute_protection = function() {
++    var func = Module._SDL_PauseAudio;
++    if (!func) {
++      try {
++        func = eval('_SDL_PauseAudio');
++      } catch (e) {}
++    }
++    if (!func)
++      throw Error('EmscriptenRunner cant un/mute'); // avoid abort()
++  };
++
+    EmscriptenRunner.prototype.mute = function () {
+      try {
+-       if (!SDL_PauseAudio)
+-         SDL_PauseAudio = Module.cwrap('SDL_PauseAudio', '', ['number']);
+-       SDL_PauseAudio(true);
++       mute_protection();
++       if (!window.SDL_PauseAudio)
++         window.SDL_PauseAudio = Module.cwrap('SDL_PauseAudio', '', ['number']);
++       window.SDL_PauseAudio(true);
+      } catch (x) {
+        console.log("Unable to change audio state:", x);
+      }
+@@ -1271,9 +1299,10 @@ var Module = null;
+ 
+    EmscriptenRunner.prototype.unmute = function () {
+      try {
+-       if (!SDL_PauseAudio)
+-         SDL_PauseAudio = Module.cwrap('SDL_PauseAudio', '', ['number']);
+-       SDL_PauseAudio(false);
++       mute_protection();
++       if (!window.SDL_PauseAudio)
++         window.SDL_PauseAudio = Module.cwrap('SDL_PauseAudio', '', ['number']);
++       window.SDL_PauseAudio(false);
+      } catch (x) {
+        console.log("Unable to change audio state:", x);
+      }
+@@ -1712,7 +1741,6 @@ var Module = null;
+      var runner;
+ 
+      var muted = false;
+-     var SDL_PauseAudio;
+      this.isMuted = function () { return muted; };
+      this.mute = function () { return this.setMute(true); };
+      this.unmute = function () { return this.setMute(false); };
+@@ -1728,9 +1756,9 @@ var Module = null;
+        }
+        else {
+          try {
+-           if (!SDL_PauseAudio)
+-             SDL_PauseAudio = Module.cwrap('SDL_PauseAudio', '', ['number']);
+-           SDL_PauseAudio(state);
++           if (!window.SDL_PauseAudio)
++             window.SDL_PauseAudio = Module.cwrap('SDL_PauseAudio', '', ['number']);
++           window.SDL_PauseAudio(state);
+          } catch (x) {
+            console.log("Unable to change audio state:", x);
+          }
+@@ -1924,11 +1952,11 @@ var Module = null;
+                                                          for (var i = 1; i < parts.length; i++) {
+                                                            var path = '/'+ parts.slice(0, i).join('/');
+                                                            if (!deltaFS.existsSync(path)) {
+-                                                             deltaFS.mkdirSync(path, 0777);
++                                                             deltaFS.mkdirSync(path, 0o777);
+                                                            }
+                                                          }
+                                                        }
+-                                                       deltaFS.writeFileSync(filename, new Buffer(data), null, flag_w, 0644);
++                                                       deltaFS.writeFileSync(filename, new Buffer(data), null, flag_w, 0o644);
+                                                      }
+                                                    };
+                                                  }
+
