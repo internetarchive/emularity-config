@@ -56,12 +56,7 @@ https://ia-petabox.archive.org/details/gg_Star_Wars_1993LucasArts_Tiertex_Design
 - most challenging new `ruffle` type of item:
 https://ia-petabox.archive.org/details/flash_loituma
 
-## current deployments - production, uses the `production` branch:
-- https://internetarchive-emularity-engine.dev.archive.org/
-- https://internetarchive-emularity-config.dev.archive.org/
-- https://internetarchive-emularity-bios.dev.archive.org/
-
-## current deployments - testing, this one is for the `main` branch:
+## current deployments - production uses the `main` branch:
 - https://emularity-engine.ux-b.archive.org/
 - https://emularity-config.ux-b.archive.org/
 - https://emularity-bios.ux-b.archive.org/
