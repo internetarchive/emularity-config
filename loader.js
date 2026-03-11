@@ -1235,6 +1235,25 @@ window.Module = null;
      var self = this;
      this._canvas = canvas;
      this._hooks = { start: [], reset: [] };
+
+     // If passed in canvas is in a shadow root, Emscripten's later findEventTarget('#canvas')
+     // won't find it via document queries — patch both to fall back to shadow root.
+     if (canvas.getRootNode && canvas.getRootNode() !== document) {
+        var _root = canvas.getRootNode();
+        var _origGetById = document.getElementById.bind(document);
+        var _origQS = document.querySelector.bind(document);
+        document.getElementById = function(id) {
+          return _origGetById(id) || _root.querySelector('#' + id);
+        };
+        document.querySelector = function(sel) {
+          return _origQS(sel) || _root.querySelector(sel);
+        };
+        this._restoreDocQueries = function() {
+          document.getElementById = _origGetById;
+          document.querySelector = _origQS;
+        };
+     }
+
      // This is somewhat wrong, because our Emscripten-based emulators
      // are currently compiled to start immediately when their js file
      // is loaded.
@@ -1273,6 +1292,7 @@ window.Module = null;
    };
 
    EmscriptenRunner.prototype.stop = function () {
+    if (this._restoreDocQueries) this._restoreDocQueries();
    };
 
   var mute_protection = function() {
