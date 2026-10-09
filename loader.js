@@ -28,7 +28,7 @@ globalThis.Module = null;
      // IA actually gives us an object here, and we really ought to be
      // looking things up from it instead.
      if (typeof game !== 'string') {
-       game = game.toString();
+       game = game.identifier;
      }
      if (!callbacks || typeof callbacks !== 'object') {
        callbacks = { before_emulator: updateLogo,
