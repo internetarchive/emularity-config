@@ -1238,24 +1238,26 @@ globalThis.Module = null;
      // This is somewhat wrong, because our Emscripten-based emulators
      // are currently compiled to start immediately when their js file
      // is loaded.
-     Module = { arguments: game_data.emulator_arguments,
-                screenIsReadOnly: true,
-                print: function (text) { console.log(text); },
-                printErr: function (text) { console.log(text); },
-                canvas: canvas,
-                noInitialRun: false,
-                locateFile: game_data.locateAdditionalJS,
-                wasmBinary: game_data.wasmBinary,
-                preInit: function () {
-                           // Re-initialize BFS to just use the writable in-memory storage.
-                           BrowserFS.initialize(game_data.fs);
-                           const BFS = new BrowserFS.EmscriptenFS();
-                           // Mount the file system into Emscripten.
-                           FS.mkdir('/emulator');
-                           FS.mount(BFS, {root: '/'}, '/emulator');
-                         },
-                preRun: [() => this._hooks.start.forEach((f) => { f && f() })]
-              };
+     Module = {
+       arguments: game_data.emulator_arguments,
+       screenIsReadOnly: true,
+       print: console.log,
+       // TODO use console.error?
+       printErr: console.log,
+       canvas: canvas,
+       noInitialRun: false,
+       locateFile: game_data.locateAdditionalJS,
+       wasmBinary: game_data.wasmBinary,
+       preInit: function () {
+         // Re-initialize BFS to just use the writable in-memory storage.
+         BrowserFS.initialize(game_data.fs);
+         const BFS = new BrowserFS.EmscriptenFS();
+         // Mount the file system into Emscripten.
+         FS.mkdir('/emulator');
+         FS.mount(BFS, {root: '/'}, '/emulator');
+       },
+       preRun: [() => this._hooks.start.forEach((f) => { f && f() })]
+     };
    }
 
    EmscriptenRunner.prototype.start = function () { };
