@@ -1251,7 +1251,39 @@ globalThis.Module = null;
        preInit: function () {
          // Re-initialize BFS to just use the writable in-memory storage.
          BrowserFS.initialize(game_data.fs);
-         const BFS = new BrowserFS.EmscriptenFS();
+         // emscripten/browserfs backports from this PR:
+         //   https://github.com/db48x/emularity/pull/114/changes
+
+         // Newer emscripten (>=3.x) no longer exposes ERRNO_CODES as a
+         // global, and FS/PATH are module-scoped vars that happen to be
+         // globals because mame.js is a plain top-level script. Pass them
+         // explicitly to EmscriptenFS so BrowserFS can map node errno
+         // names (e.g. ENOENT) to numbers.
+         const ERRNO_CODES_MAP = {
+           EPERM: 1, ENOENT: 2, ESRCH: 3, EINTR: 4, EIO: 5, ENXIO: 6,
+           E2BIG: 7, ENOEXEC: 8, EBADF: 9, ECHILD: 10, EAGAIN: 11,
+           ENOMEM: 12, EACCES: 13, EFAULT: 14, EBUSY: 16, EEXIST: 17,
+           EXDEV: 18, ENODEV: 19, ENOTDIR: 20, EISDIR: 21, EINVAL: 22,
+           ENFILE: 23, EMFILE: 24, ENOTTY: 25, ETXTBSY: 26, EFBIG: 27,
+           ENOSPC: 28, ESPIPE: 29, EROFS: 30, EMLINK: 31, EPIPE: 32,
+           EDOM: 33, ERANGE: 34, ENOTEMPTY: 39, ELOOP: 40,
+           ENAMETOOLONG: 37, ENOSYS: 38
+         };
+         const BFS = new BrowserFS.EmscriptenFS(FS, PATH, ERRNO_CODES_MAP);
+         // Emscripten 6+ extracts node_ops/stream_ops methods and
+         // calls them as bare functions (e.g. getattr(node) instead
+         // of node_ops.getattr(node)), losing `this`. Bind every
+         // method on the node_ops and stream_ops wrapper objects so
+         // they retain their context regardless of call convention.
+         ["node_ops", "stream_ops"].forEach((key) => {
+           const ops = BFS[key];
+           if (!ops) return;
+           Object.getOwnPropertyNames(Object.getPrototypeOf(ops)).forEach((name) => {
+             if (name !== "constructor" && typeof ops[name] === "function") {
+               ops[name] = ops[name].bind(ops);
+             }
+           });
+         });
          // Mount the file system into Emscripten.
          FS.mkdir('/emulator');
          FS.mount(BFS, {root: '/'}, '/emulator');
