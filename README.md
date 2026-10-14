@@ -19,7 +19,6 @@ Everything is served from the site root, so the file paths are the URLs. Don't m
 - `loader.js`: the loader that archive.org's emulation item pages run. It sets `window.IALoader` and the per-emulator loaders.
 - `*.cfg`: one per emulator module, fetched by `loader.js` as `/<module>.cfg`. Almost all of them are empty. The loader treats them as optional.
 - `jsmess_keyboard_v2/`: on-screen keyboard scripts, requested by `jsmess-keyboard.js` and `<keyboard>.js`.
-- `*.json`, images, `gb.conf`: leftovers from when these files lived in the `emularity_config_v1` item. Nothing requests them.
 - `nginx/default.conf`, `Dockerfile`, `.dockerignore`: the nginx container. `.dockerignore` keeps `docs/`, `scripts/`, `Makefile` and the README out of the container, and the Dockerfile moves `nginx/default.conf` into place.
 - `docs/history/`: `loader.js.diff` and the old item's metadata sqlite. Not served.
 

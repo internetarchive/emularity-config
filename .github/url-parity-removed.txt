@@ -3,3 +3,15 @@ default.conf
 Makefile
 loader.js.diff
 emularity_config_v1_meta.sqlite
+ct486.json
+dosbox-x.json
+pce-atarist-color.json
+pce-atarist.json
+pce-macclassic.json
+pce-macplus.json
+pce-macse.json
+sae-a2000.json
+gb.conf
+__ia_thumb.jpg
+emularity_thumb.jpg
+emularity.png
