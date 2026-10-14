@@ -1,0 +1,22 @@
+name: ci
+on:
+  pull_request:
+jobs:
+  url-parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Build container
+        run: docker build -t emularity-config:ci .
+      - name: nginx -t
+        run: docker run --rm emularity-config:ci nginx -t
+      - name: Serve and compare against main
+        run: |
+          docker run -d --name site -p 8080:80 emularity-config:ci
+          for i in $(seq 1 20); do curl -sf -o /dev/null http://localhost:8080/ && break; sleep 1; done
+          python3 scripts/check-url-parity.py http://localhost:8080 origin/main
+      - name: Container logs
+        if: failure()
+        run: docker logs site

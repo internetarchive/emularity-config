@@ -1,2 +1,7 @@
 *~
 *swp
+.DS_Store
+node_modules/
+.claude/worktrees/
+*.log
+.env

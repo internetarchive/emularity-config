@@ -1,72 +1,68 @@
-# IA S/W Emulation
+# emularity-config
 
-# How does this all work
-The files are grouped and split up into 3 GitHub repositories (linked below) and corresponding deploys.
+Static files for archive.org software emulation. This is one of three repos, each deployed as its own site:
 
-## GitHub Actions
+- [emularity-engine](https://github.com/internetarchive/emularity-engine): emulator cores, per-game `.json` configs, `browserfs.min.js`
+- emularity-config (this repo): `loader.js`, `.cfg` files, on-screen keyboard scripts
+- [emularity-bios](https://github.com/internetarchive/emularity-bios): BIOS and ROM files
 
-Internet Archive is using docker OCI containers to serve the repo files as static files,
-with a lightly customized `nginx` httpd server.  Each deployed container is running on a
-[nomad](https://github.com/internetarchive/hind) cluster.
+Production uses the `main` branch of each:
 
-Each `git push` to this repo will cause a [GitHub Actions](../../actions) CI/CD
-[pipeline](.github/workflows/cicd.yml) to run.
-Presently, it does a [build] and [deploy] pair of jobs.
-(See [CI/CD GitHub Action for more info](https://github.com/internetarchive/cicd).)
-
-## loader.js
-
-The main ringleader from an archive.org/details/ page for a s/w emulation "item" will load
-[loader.js](https://github.com/internetarchive/emularity-engine/blob/main/loader.js).
-
-## browserFS
-There is a parallel
-[browserfs.min.js](https://github.com/internetarchive/emularity-engine/blob/main/browserfs.min.js)
-file that gets loaded alongside `loader.js`.
-It is used for `node` backend-like FileSystem operations like reading and writing files,
-in the context of the browser.
-Tracey thinks this came from here:
-- https://www.npmjs.com/package/browserfs
-and notes the `browserfs.min.js*` file pair have a fix from db48x *after*
-the v1.4.3.  Likely worth looking into the near future if/as needed.
-browserFS can use "ES Modules" for JS import/loading via something like:
-```js
-import BrowserFS from 'https://esm.sh/browserfs'
-```
-
-## nginx
-Each repo has the same layout, with all files starting at the top dir:
-- [README.md](README.md) - this file
-- [default.conf](default.conf) - nginx configuration
-- [Dockerfile](Dockerfile) - container build instructions
-- [.dockerignore](.dockerignore) - files to skip copying into the deployed container
-- [.gitignore](.gitignore) - any files to ignore and not checkin
-- [.github/workflows/cicd.yml](.github/workflows/cicd.yml) - GitHub Actions setup
-We aim to keep all 3 repos with the same 6 files.
-
-the nginx has a few critical changes for the handling of `.gz` files -- since nginx can *also*
-"gzip on the fly" text files as well.  Thus, the browser needs to know if the file is being
-dynamically turned to a `.gz` file by `nginx` -- or if the file is being served as an already
-compressed `.gz` as a static file.
-
-## example items
-- typical type of item:
-https://ia-petabox.archive.org/details/gg_Star_Wars_1993LucasArts_Tiertex_Design_Studio_U.S._GoldUS
-
-- most challenging new `ruffle` type of item:
-https://ia-petabox.archive.org/details/flash_loituma
-
-## current deployments - production uses the `main` branch:
 - https://emularity-engine.ux-b.archive.org/
 - https://emularity-config.ux-b.archive.org/
 - https://emularity-bios.ux-b.archive.org/
 
-## there are 3 related git repos & deployments:
-- https://github.com/internetarchive/emularity-engine
-- https://github.com/internetarchive/emularity-config
-- https://github.com/internetarchive/emularity-bios
+## What's here
 
-## prior archive.org source items with setup files:
+Everything is served from the site root, so the file paths are the URLs. Don't move or rename a file without checking who requests it (see below).
+
+- `loader.js`: the loader that archive.org's emulation item pages run. It sets `window.IALoader` and the per-emulator loaders.
+- `*.cfg`: one per emulator module, fetched by `loader.js` as `/<module>.cfg`. Almost all of them are empty. The loader treats them as optional.
+- `jsmess_keyboard_v2/`: on-screen keyboard scripts, requested by `jsmess-keyboard.js` and `<keyboard>.js`.
+- `*.json`, `emularity_config_v1_meta.sqlite`, images, `gb.conf`, `loader.js.diff`: leftovers from when these files lived in the `emularity_config_v1` item. Nothing requests them.
+- `default.conf`, `Dockerfile`, `.dockerignore`: the nginx container.
+
+## Who requests these files
+
+- petabox `components/entry/emulation.js` loads `loader.js` and `jsmess_keyboard_v2/*.js`. On archive.org the path is `/services/emularity/config/`, proxied to this site by `etc/nginx/petabox/webnode/proxy.d/emularity-proxy.conf`.
+- offshoot `software-player.ts` loads `/loader.js` and `/jsmess_keyboard_v2/*.js`.
+- `loader.js` itself requests `/<module>.cfg`.
+- Cached or older copies of `loader.js` keep requesting the same root URLs, so a removed file is a production break even if nothing in these repos mentions it.
+
+## Deploy
+
+Every push runs [cicd.yml](.github/workflows/cicd.yml), which builds the container and deploys it to the [nomad](https://github.com/internetarchive/hind) cluster. Pushing `main` goes to production. See [internetarchive/cicd](https://github.com/internetarchive/cicd).
+
+nginx serves the files as is. `default.conf` has the CORS headers, and special handling for `.gz` files so the browser knows whether the file is compressed on the fly or already a `.gz`. `.dockerignore` lists what stays out of the container.
+
+## CI
+
+[ci.yml](.github/workflows/ci.yml) runs on pull requests. It builds the container, runs `nginx -t`, then serves it and checks that every file on `main` that's served still returns 200 with the same bytes and `Access-Control-Allow-Origin: *`.
+
+It only protects `main` if it's a required check in the branch protection settings.
+
+To drop a file on purpose, add its path to `.github/url-parity-removed.txt` in the same PR.
+
+Run it locally:
+
+```sh
+docker build -t emularity-config:ci .
+docker run -d --name site -p 8080:80 emularity-config:ci
+python3 scripts/check-url-parity.py http://localhost:8080 origin/main
+docker rm -f site
+```
+
+## browserFS
+
+`browserfs.min.js` lives in emularity-engine and is loaded alongside `loader.js`. It gives the emulators `node`-style filesystem calls in the browser. It's [browserfs](https://www.npmjs.com/package/browserfs) 1.4.3 plus a fix from db48x.
+
+## Example items
+
+- https://ia-petabox.archive.org/details/gg_Star_Wars_1993LucasArts_Tiertex_Design_Studio_U.S._GoldUS
+- https://ia-petabox.archive.org/details/flash_loituma (a `ruffle` item)
+
+## Older copies
+
 - https://archive.org/serve/emularity_engine_v1
 - https://archive.org/serve/emularity_config_v1
 - https://archive.org/serve/emularity_bios_v1
