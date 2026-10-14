@@ -19,8 +19,9 @@ Everything is served from the site root, so the file paths are the URLs. Don't m
 - `loader.js`: the loader that archive.org's emulation item pages run. It sets `window.IALoader` and the per-emulator loaders.
 - `*.cfg`: one per emulator module, fetched by `loader.js` as `/<module>.cfg`. Almost all of them are empty. The loader treats them as optional.
 - `jsmess_keyboard_v2/`: on-screen keyboard scripts, requested by `jsmess-keyboard.js` and `<keyboard>.js`.
-- `*.json`, `emularity_config_v1_meta.sqlite`, images, `gb.conf`, `loader.js.diff`: leftovers from when these files lived in the `emularity_config_v1` item. Nothing requests them.
-- `default.conf`, `Dockerfile`, `.dockerignore`: the nginx container.
+- `*.json`, images, `gb.conf`: leftovers from when these files lived in the `emularity_config_v1` item. Nothing requests them.
+- `nginx/default.conf`, `Dockerfile`, `.dockerignore`: the nginx container. `.dockerignore` keeps `docs/`, `scripts/`, `Makefile` and the README out of the container, and the Dockerfile moves `nginx/default.conf` into place.
+- `docs/history/`: `loader.js.diff` and the old item's metadata sqlite. Not served.
 
 ## Who requests these files
 
@@ -33,7 +34,7 @@ Everything is served from the site root, so the file paths are the URLs. Don't m
 
 Every push runs [cicd.yml](.github/workflows/cicd.yml), which builds the container and deploys it to the [nomad](https://github.com/internetarchive/hind) cluster. Pushing `main` goes to production. See [internetarchive/cicd](https://github.com/internetarchive/cicd).
 
-nginx serves the files as is. `default.conf` has the CORS headers, and special handling for `.gz` files so the browser knows whether the file is compressed on the fly or already a `.gz`. `.dockerignore` lists what stays out of the container.
+nginx serves the files as is. `nginx/default.conf` has the CORS headers, and special handling for `.gz` files so the browser knows whether the file is compressed on the fly or already a `.gz`. `.dockerignore` lists what stays out of the container.
 
 ## CI
 

@@ -1,4 +1,6 @@
 .git*
 README.md
 Dockerfile
+Makefile
 scripts/
+docs/

@@ -1,0 +1,5 @@
+# Paths dropped on purpose; the URL parity check skips these.
+default.conf
+Makefile
+loader.js.diff
+emularity_config_v1_meta.sqlite
