@@ -1308,7 +1308,7 @@ globalThis.Module = null;
        }
 
        if (globalThis.Module._SDL_PauseAudio) {
-         globalThis.Module.ccall("SDL_PauseAudio", "", ["number"], enables ? 1 : 0);
+         globalThis.Module.ccall("SDL_PauseAudio", "", ["number"], enabled ? 1 : 0);
          return;
        }
 
