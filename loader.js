@@ -1300,40 +1300,30 @@ globalThis.Module = null;
     if (this._restoreDocQueries) this._restoreDocQueries();
    };
 
-  const mute_protection = function() {
-    let func = Module._SDL_PauseAudio;
-    if (!func) {
-      try {
-        func = eval('_SDL_PauseAudio');
-      } catch {
-        // will note error state if func ends up falsey
-      }
-    }
-    if (!func)
-      throw Error('EmscriptenRunner cant un/mute'); // avoid abort()
-  };
-
-   EmscriptenRunner.prototype.mute = function () {
+   const sdl_pause_audio = (enabled) => {
      try {
-       mute_protection();
-       if (!globalThis.SDL_PauseAudio)
-         // TODO Module is undefined here so this always throws
-         globalThis.SDL_PauseAudio = Module.cwrap('SDL_PauseAudio', '', ['number']);
-       globalThis.SDL_PauseAudio(true);
+       if (!globalThis.Module) {
+         console.warn("can't pause audio: Module is null");
+         return;
+       }
+
+       if (globalThis.Module._SDL_PauseAudio) {
+         globalThis.Module.ccall("SDL_PauseAudio", "", ["number"], enables ? 1 : 0);
+         return;
+       }
+
+       console.warn("emulator does not expose SDL_PauseAudio, can't toggle mute");
      } catch (x) {
-       console.log("Unable to change audio state:", x);
+       console.warn("unable to toggle mute:", x);
      }
    };
 
+   EmscriptenRunner.prototype.mute = function () {
+     sdl_pause_audio(true);
+   };
+
    EmscriptenRunner.prototype.unmute = function () {
-     try {
-       mute_protection();
-       if (!globalThis.SDL_PauseAudio)
-         globalThis.SDL_PauseAudio = Module.cwrap('SDL_PauseAudio', '', ['number']);
-       globalThis.SDL_PauseAudio(false);
-     } catch (x) {
-       console.log("Unable to change audio state:", x);
-     }
+     sdl_pause_audio(false);
    };
 
    EmscriptenRunner.prototype.onStarted = function (func) {
@@ -1770,13 +1760,7 @@ globalThis.Module = null;
          }
        }
        else {
-         try {
-           if (!globalThis.SDL_PauseAudio)
-             globalThis.SDL_PauseAudio = Module.cwrap('SDL_PauseAudio', '', ['number']);
-           globalThis.SDL_PauseAudio(state);
-         } catch (x) {
-           console.log("Unable to change audio state:", x);
-         }
+         sdl_pause_audio(state);
        }
        return this;
      };
