@@ -839,7 +839,7 @@ globalThis.Module = null;
    function DosBoxLoader() {
      const config = Array.prototype.reduce.call(arguments, extend);
      config.emulator_arguments = build_dosbox_arguments(config.emulatorStart, config.files, config.extra_dosbox_args);
-     config.runner = EmscriptenRunner;
+     config.runner = DosBoxRunner;
      return config;
    }
    DosBoxLoader.__proto__ = BaseLoader;
@@ -1337,6 +1337,54 @@ globalThis.Module = null;
    EmscriptenRunner.prototype.requestFullScreen = function () {
      this._canvas.requestFullscreen();
    };
+
+  // Our compiled versions of dosbox do not expose SDL_PauseAudio which means
+  // our sdl_pause_audio helper does not work. This custom runner exists to
+  // initialize an audioContext that we can later control. It could be deleted
+  // if we change how we compile our dosboxes, in theory.
+  function DosBoxRunner() {
+    EmscriptenRunner.apply(this, arguments);
+    this._muted = false;
+    this._audioCtx = undefined;
+    const sdl2 = {};
+    Object.defineProperty(sdl2, 'audioContext', {
+      configurable: true,
+      enumerable: true,
+      get: () => this._audioCtx,
+      set: (ctx) => {
+        if (!ctx) {
+          return;
+        }
+        this._audioCtx = ctx;
+        ctx.addEventListener('statechange', function () {
+          if (this._muted && ctx === this._audioCtx && ctx.state === 'running') {
+            ctx.suspend();
+          }
+        });
+        if (this._muted) {
+          ctx.suspend();
+        }
+      }
+    });
+    // dosbox-x looks up Module.SDL2. NB: I couldn't find any dosbox-x ROMs
+    // that actually /have/ sound so this is effectively untested.
+    Module.SDL2 = sdl2;
+    // dosbox/dosbox-sync use a global SDL2.
+    globalThis.SDL2 = sdl2;
+  }
+  DosBoxRunner.prototype = Object.create(EmscriptenRunner.prototype);
+  DosBoxRunner.prototype.mute = function () {
+    this._muted = true;
+    if (this._audioCtx && this._audioCtx.state === 'running') {
+      this._audioCtx.suspend();
+    }
+  };
+  DosBoxRunner.prototype.unmute = function () {
+    this._muted = false;
+    if (this._audioCtx && this._audioCtx.state === 'suspended') {
+      this._audioCtx.resume();
+    }
+  };
 
    /*
     * PC98DosBoxRunner
