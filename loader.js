@@ -536,8 +536,8 @@ globalThis.Module = null;
 
        files.push(
          cfgr.mountFile('/pce-'+ modulecfg['driver'] + '.cfg',
-                        cfgr.fetchOptionalFile('Config File',
-                                               get_other_emulator_config_url('pce-'+ modulecfg['driver']))));
+                        cfgr.fetchFile('Config File',
+                                       get_other_emulator_config_url('pce-'+ modulecfg['driver']))));
        return files;
      }
 
