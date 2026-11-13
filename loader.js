@@ -2189,27 +2189,32 @@ globalThis.Module = null;
                               xhr.onprogress = function (e) {
                                                  titleCell.innerHTML = title +" <span style=\"font-size: smaller\">"+ formatSize(e) +"</span>";
                                                };
+                              // For optional files that !200 or outright fail
+                              // to xhr, we fake an empty file for anything
+                              // marked "optional." Lore has it that some
+                              // emulators want a .cfg file in place even if
+                              // it's empty. I did not test this hypothesis but
+                              // did this change so we can at least stop
+                              // keeping tons of 0-byte *.cfg files in the
+                              // emularity-config reposiotry.
+                              const onFailOrNon200 = () => {
+                                if (optional) {
+                                  success();
+                                  resolve(new ArrayBuffer());
+                                } else {
+                                  failure();
+                                  reject();
+                                }
+                              };
                               xhr.onload = function (_e) {
-                                             if (xhr.status === 200) {
-                                               success();
-                                               resolve(xhr.response);
-                                             } else if (optional) {
-                                               success();
-                                               resolve(null);
-                                             } else {
-                                               failure();
-                                               reject();
-                                             }
-                                           };
-                              xhr.onerror = function (_e) {
-                                              if (optional) {
-                                                success();
-                                                resolve(null);
-                                              } else {
-                                                failure();
-                                                reject();
-                                              }
-                                            };
+                                if (xhr.status === 200) {
+                                  success();
+                                  resolve(xhr.response);
+                                  return;
+                                }
+                                onFailOrNon200();
+                              };
+                              xhr.onerror = onFailOrNon200;
                               xhr.send();
                             }
                           });
