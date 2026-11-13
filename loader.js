@@ -536,8 +536,8 @@ globalThis.Module = null;
 
        files.push(
          cfgr.mountFile('/pce-'+ modulecfg['driver'] + '.cfg',
-                        cfgr.fetchOptionalFile('Config File',
-                                               get_other_emulator_config_url('pce-'+ modulecfg['driver']))));
+                        cfgr.fetchFile('Config File',
+                                       get_other_emulator_config_url('pce-'+ modulecfg['driver']))));
        return files;
      }
 
@@ -2179,40 +2179,43 @@ globalThis.Module = null;
        const titleCell = row[0], statusCell = row[1];
        titleCell.textContent = title;
        return new Promise(function (resolve, reject) {
-                            if (cached) {
-                              success();
-                              resolve(url); // second parameter reused as a pass–through
-                            } else {
-                              const xhr = new XMLHttpRequest();
-                              xhr.open('GET', url, true);
-                              xhr.responseType = rt || 'arraybuffer';
-                              xhr.onprogress = function (e) {
-                                                 titleCell.innerHTML = title +" <span style=\"font-size: smaller\">"+ formatSize(e) +"</span>";
-                                               };
-                              xhr.onload = function (_e) {
-                                             if (xhr.status === 200) {
-                                               success();
-                                               resolve(xhr.response);
-                                             } else if (optional) {
-                                               success();
-                                               resolve(null);
-                                             } else {
-                                               failure();
-                                               reject();
-                                             }
-                                           };
-                              xhr.onerror = function (_e) {
-                                              if (optional) {
-                                                success();
-                                                resolve(null);
-                                              } else {
-                                                failure();
-                                                reject();
-                                              }
-                                            };
-                              xhr.send();
-                            }
-                          });
+         if (cached) {
+           success();
+           resolve(url);
+           return;
+         }
+         const xhr = new XMLHttpRequest();
+         xhr.open('GET', url, true);
+         xhr.responseType = rt || 'arraybuffer';
+         xhr.onprogress = (e) => {
+           titleCell.innerHTML = `${title} <span style="font-size: smaller">${formatSize(e)}</span>`;
+         };
+         // For optional files that !200 or outright fail to xhr, we fake an
+         // empty file for anything marked "optional." Lore has it that some
+         // emulators want a .cfg file in place even if it's empty. I did not
+         // test this hypothesis but did this change so we can at least stop
+         // keeping tons of 0-byte *.cfg files in the emularity-config
+         // repository.
+         const onFailOrNon200 = () => {
+           if (optional) {
+             success();
+             resolve(new ArrayBuffer());
+           } else {
+             failure();
+             reject();
+           }
+         };
+         xhr.onload = function () {
+           if (xhr.status === 200) {
+             success();
+             resolve(xhr.response);
+             return;
+           }
+           onFailOrNon200();
+         };
+         xhr.onerror = onFailOrNon200;
+         xhr.send();
+       });
        function success() {
          statusCell.textContent = "✔";
          titleCell.parentNode.classList.add('emularity-download-success');
