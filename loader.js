@@ -493,13 +493,13 @@ globalThis.Module = null;
          // a malicious SWF using a same-origin request to behave on
          // archive.org as another user.
          //
-         // Thus, this hack to rewrite all URLs requested by an SWF to 'example.com'.
-         // I chose this domain as it is controlled by IANA.
+         // Thus, this hack to rewrite all non-cors.archive.org URLs requested
+         // by an SWF to 'example.com'. I chose this domain as it is
+         // controlled by IANA.
          //
          // In the future we may want to explore allowing SWFs to load
-         // historical URLs from the wayback machine; but until then, we
-         // shouldn't allow SWFs to initiate requests at all.
-         [/^.*$/, "https://example.com"]
+         // historical URLs from the wayback machine.
+         [/^(?!https:\/\/cors\.archive\.org\/).*$/, "https://example.com"]
        ];
        const files = [];
        const meta = dict_from_xml(metadata);
