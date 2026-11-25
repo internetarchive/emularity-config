@@ -483,6 +483,24 @@ globalThis.Module = null;
      function get_ruffle_files(cfgr, metadata, modulecfg, filelist) {
        globalThis.RufflePlayer = globalThis.RufflePlayer || {};
        globalThis.RufflePlayer.config = modulecfg.config;
+       globalThis.RufflePlayer.config.urlRewriteRules = [
+         // Why do this?
+         // SWF programs can instruct the browser to make web requests. This is
+         // dangerous. We disable it in ruffle-swf.json over in the
+         // emularity-engine repo. However, SWFs can still trigger a network
+         // request via LoadVars in ActionScript2; this is not prevented by
+         // ruffle. While CORS mitigates this risk, there is always the risk of
+         // a malicious SWF using a same-origin request to behave on
+         // archive.org as another user.
+         //
+         // Thus, this hack to rewrite all non-cors.archive.org URLs requested
+         // by an SWF to 'example.com'. I chose this domain as it is
+         // controlled by IANA.
+         //
+         // In the future we may want to explore allowing SWFs to load
+         // historical URLs from the wayback machine.
+         [/^(?!https:\/\/cors\.archive\.org\/).*$/, "https://example.com"]
+       ];
        const files = [];
        const meta = dict_from_xml(metadata);
        const game_files = files_with_ext_from_filelist(filelist, meta.emulator_ext);
